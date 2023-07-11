@@ -28,18 +28,22 @@ namespace UnrealEngineInstaller
             Log.Warning("If everything ready, press any key to continue...");
             Console.ReadKey();
 
-            bool ForceEnabled = false;
+            bool bForceEnabled = false;
+            bool bPlasticEnabled = true;
             if (args.Length > 0)
             {
-                if (args[0] == "-force")
-                    ForceEnabled = true;
+                foreach (string arg in args)
+                {
+                    if (arg == "-force") bForceEnabled = true;
+                    if (arg == "-noplastic") bPlasticEnabled = false;
+                }
             }
 
             try
             {
                 Initialize();
 
-                CheckPrerequisites(ForceEnabled);
+                CheckPrerequisites(bForceEnabled, bPlasticEnabled);
 
                 //Visual Studio
                 bool hasVisualStudio = visualStudioHandler.CheckIsInstalled();
@@ -49,8 +53,7 @@ namespace UnrealEngineInstaller
                     visualStudioHandler.InstallVisualStudio();
 
                 //Unreal engine
-                //var gitToken = GetUserInput("Please Enter your Git PAT Token:");
-                string gitToken = "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"; // Omrum's PAT Token
+                var gitToken = GetUserInput("Please Enter your Git PAT Token:");
                 string unrealEngineRootPath = GetUserInput(@"Please Enter a path to download unreal engine: (Default: C:\Program Files\UnrealEngine)");
                 if (string.IsNullOrEmpty(unrealEngineRootPath))
                 {
@@ -65,15 +68,18 @@ namespace UnrealEngineInstaller
                 unrealEngineHandler.BuildUnrealEngine(msBuildPath);
 
                 //Plastic SCM
-                var repoPath = GetUserInput(@"Please Enter a path to create Plastic SCM workspace: (Default: C:\Repos)");
-                if (string.IsNullOrEmpty(repoPath))
+                if (bPlasticEnabled)
                 {
-                    repoPath = @"C:\Repos";
+                    var repoPath = GetUserInput(@"Please Enter a path to create Plastic SCM workspace: (Default: C:\Repos)");
+                    if (string.IsNullOrEmpty(repoPath))
+                    {
+                        repoPath = @"C:\Repos";
+                    }
+                    var plasticWorkspaceName = GetUserInput(@"Please Enter the workspace name. (Default : repo name will be used.)");
+                    plasticScmHandler.CreateWorkspace(repoPath, plasticWorkspaceName);
+                    plasticScmHandler.SwitchBranchAndUpdateWorkspace();
+                    plasticScmHandler.SwitchUnrealVersionInWorkspace(unrealEngineRootPath);
                 }
-                var plasticWorkspaceName = GetUserInput(@"Please Enter the workspace name. (Default : repo name will be used.)");
-                plasticScmHandler.CreateWorkspace(repoPath, plasticWorkspaceName);
-                plasticScmHandler.SwitchBranchAndUpdateWorkspace();
-                plasticScmHandler.SwitchUnrealVersionInWorkspace(unrealEngineRootPath);
             }
             catch (Exception ex)
             {
@@ -114,7 +120,7 @@ namespace UnrealEngineInstaller
             return appSettings;
         }
 
-        static void CheckPrerequisites(bool IsForceEnabled)
+        static void CheckPrerequisites(bool IsForceEnabled, bool IsPlasticEnabled)
         {
             if (IsForceEnabled)
             {
@@ -122,7 +128,12 @@ namespace UnrealEngineInstaller
             }
             bool isValidVisualStudio = visualStudioHandler.CheckPrerequisites();
             bool isValidUnrealEngine = unrealEngineHandler.CheckPrerequisites();
-            bool isValidPlasticScm = plasticScmHandler.CheckPrerequisites();
+
+            bool isValidPlasticScm = true;
+            if (IsPlasticEnabled)
+            {
+                isValidPlasticScm = plasticScmHandler.CheckPrerequisites();
+            }
             bool isValidOthers = LocalHandler.CheckOtherPrerequisites();
 
             bool result = (isValidVisualStudio && isValidUnrealEngine && isValidPlasticScm && isValidOthers) || IsForceEnabled;
