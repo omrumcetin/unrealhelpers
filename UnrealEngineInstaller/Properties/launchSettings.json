@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "UnrealEngineInstaller": {
+      "commandName": "Project",
+      "commandLineArgs": "-force"
+    }
+  }
+}
