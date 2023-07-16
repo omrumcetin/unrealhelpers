@@ -30,12 +30,16 @@ namespace UnrealEngineInstaller
 
             bool bForceEnabled = false;
             bool bPlasticEnabled = true;
+            bool bFixDeps = false;
+            bool bFixSolver = false;
             if (args.Length > 0)
             {
                 foreach (string arg in args)
                 {
                     if (arg == "-force") bForceEnabled = true;
                     if (arg == "-noplastic") bPlasticEnabled = false;
+                    if (arg == "-fixdeps") bFixDeps = true;
+                    if (arg == "-fixsolver") bFixSolver = true;
                 }
             }
 
@@ -61,11 +65,11 @@ namespace UnrealEngineInstaller
                 }
 
                 unrealEngineHandler.CloneGitUnrealEngine(gitToken, unrealEngineRootPath);
-                unrealEngineHandler.CopyCommitGitDepths();
+                if (bFixDeps) unrealEngineHandler.CopyCommitGitDepths();
                 unrealEngineHandler.RunSetupBat();
                 unrealEngineHandler.RunGenerateProjectFilesBat();
                 var msBuildPath = visualStudioHandler.GetMsBuildPath();
-                unrealEngineHandler.BuildUnrealEngine(msBuildPath);
+                unrealEngineHandler.BuildUnrealEngine(msBuildPath, bFixSolver);
 
                 //Plastic SCM
                 if (bPlasticEnabled)

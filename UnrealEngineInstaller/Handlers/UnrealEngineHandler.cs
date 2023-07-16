@@ -101,12 +101,13 @@ namespace UnrealEngineInstaller.Handlers
             RunFileAndWait(_unrealEngineRootPath, "GenerateProjectFiles.bat");
         }
 
-        public void BuildUnrealEngine(string msbuildPath)
+        public void BuildUnrealEngine(string msbuildPath, bool bFixSolver)
         {
             string solutionPath = FindUnrealSlnPath();
             string workingDirectory = Path.GetDirectoryName(solutionPath);
 
-            FixSolverIssue(workingDirectory);
+            if (bFixSolver)
+                FixSolverIssue(workingDirectory);
 
             Process rebuildProcess = new Process()
             {
