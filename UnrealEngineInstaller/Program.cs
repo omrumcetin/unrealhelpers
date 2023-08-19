@@ -6,6 +6,12 @@ using UnrealEngineInstaller.Handlers;
 
 namespace UnrealEngineInstaller
 {
+    enum something
+    {
+        High,
+        Low,
+        Great
+    };
     class Program
     {
         private static VisualStudioHandler visualStudioHandler;
@@ -175,8 +181,8 @@ namespace UnrealEngineInstaller
             Console.WriteLine("           ⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⣿⣿⣿⣿⣿⡟⠻⣿⣿⣿⡿⠟⠁⠀⠀         ");
             Console.WriteLine("           ⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠿⣿⣿⣿⠋⠀⠀⠈⠻⠋⠀⠀⠀⠀⠀         \n");
             Console.WriteLine("              UNREAL ENGINE DEPLOYER         ");
-            Console.WriteLine("       Magic Media & Entertainment Group Ltd.");
-            Console.WriteLine("               All rights reserved           \n\n");
+            Console.WriteLine("         2023 Omrum Cetin all rights reserved.            ");
+            Console.WriteLine("                                         \n\n");
         }
 
     }
