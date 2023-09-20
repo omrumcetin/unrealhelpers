@@ -140,11 +140,15 @@ namespace UnrealEngineInstaller.Handlers
         {
             string extention = Path.GetExtension(fileName);
             string[] files = Directory.GetFiles(directory, $"*{extention}", SearchOption.AllDirectories);
+            Log.Information($"Searching {fileName} under {directory}");
+
+            bool bFound = false;
 
             foreach (string file in files)
             {
                 if (Path.GetFileName(file) == fileName)
                 {
+                    bFound = true;
                     Log.Information($"Running {fileName}...");
 
                     Process process = Process.Start(file);
@@ -154,6 +158,12 @@ namespace UnrealEngineInstaller.Handlers
                     break;
                 }
             }
+
+            if ( !bFound )
+            {
+                throw new FileNotFoundException($"Couldnt find the file {fileName}, cancelling... Be sure your github downloaded UE files properly.");
+            }
+
         }
 
         private string FindUnrealSlnPath()
@@ -190,7 +200,7 @@ namespace UnrealEngineInstaller.Handlers
                 }
             }
 
-            throw new DirectoryNotFoundException("EU<version>.sln file not found!");
+            throw new DirectoryNotFoundException("UE<version>.sln file not found!");
         }
 
         private string FindUnrealRootPath()

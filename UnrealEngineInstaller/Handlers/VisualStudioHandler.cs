@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 
 namespace UnrealEngineInstaller.Handlers
@@ -14,18 +15,23 @@ namespace UnrealEngineInstaller.Handlers
 
         private readonly static string[] VisualStudio2022WorkloadIds = new string[]
         {
-                "Microsoft.VisualStudio.Workload.Universal", //Universal Windows Platform Development
-                "Microsoft.VisualStudio.Workload.NativeDesktop", //Desktop Development with C++
-                "Microsoft.VisualStudio.Workload.NativeGame", //Game Development with C++
-                "Microsoft.VisualStudio.Workload.ManagedDesktop", //.NET Desktop Development 2022
-                "Microsoft.NetCore.Component.SDK",
-                "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
-                "Component.Unreal.Ide",
-                "Component.Unreal",
-                "Microsoft.VisualStudio.Component.Windows10SDK.20348",
-                "Microsoft.VisualStudio.Component.Windows11SDK.22000",
-                "Microsoft.VisualStudio.Component.Windows11SDK.22621",
-                "Microsoft.Net.Component.4.6.2.TargetingPack"
+            "Microsoft.VisualStudio.Workload.CoreEditor",//Core editor
+            "Microsoft.VisualStudio.Workload.NetWeb", //ASP.NET and Web Development
+            "Microsoft.VisualStudio.Workload.Universal", //Universal Windows Platform Development
+            "Microsoft.VisualStudio.Workload.NativeDesktop", //Desktop Development with C++
+            "Microsoft.VisualStudio.Workload.NativeGame", //Game Development with C++
+            "Microsoft.VisualStudio.Workload.ManagedDesktop", //.NET Desktop Development 2022
+            // Individual components
+            "Microsoft.NetCore.Component.SDK",
+            "Microsoft.NetCore.Component.DevelopmentTools",
+            "Microsoft.NetCore.Component.Runtime.7.0",
+            "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+            "Component.Unreal.Ide",
+            "Component.Unreal",
+            "Microsoft.VisualStudio.Component.Windows10SDK.20348",
+            "Microsoft.VisualStudio.Component.Windows11SDK.22000",
+            "Microsoft.VisualStudio.Component.Windows11SDK.22621",
+            "Microsoft.Net.Component.4.6.2.TargetingPack"
         };
 
         private readonly static string[] VisualStudio2019WorkloadIds = new string[]
@@ -105,16 +111,16 @@ namespace UnrealEngineInstaller.Handlers
             ProcessStartInfo psi = new ProcessStartInfo();
             psi.FileName = installerFileName;
 
-            string vsInstallerArgs = "--install --passive --norestart --includeRecommended";
-            var workLoads = GetVisualStudioWorkloads();
-            foreach (string workLoad in workLoads)
+            string vsInstallerArgs = "--install --quiet --norestart --includeRecommended";
+            var workloadIDs = GetVisualStudioWorkloads();
+            foreach (string workLoad in workloadIDs)
             {
                 vsInstallerArgs += " --add " + workLoad;
             }
             vsInstallerArgs += " --wait";
 
             psi.Arguments = vsInstallerArgs;
-            psi.UseShellExecute = false;
+            psi.UseShellExecute = true;
 
             using (Process process = Process.Start(psi))
             {
@@ -132,16 +138,17 @@ namespace UnrealEngineInstaller.Handlers
             ProcessStartInfo psi = new ProcessStartInfo();
             psi.FileName = VisualStudioUpdaterFileName;
 
+            string vsInstallerArgs = "--update --quiet --norestart --includeRecommended";
+
+            var workloadIds = GetVisualStudioWorkloads();
+            foreach (string id in workloadIds)
+                vsInstallerArgs += " --add " + id;
+            vsInstallerArgs += " --wait";
+
+            psi.Arguments = vsInstallerArgs;
+
             using (Process process = Process.Start(psi))
             {
-                string vsInstallerArgs = "--update --passive --norestart";
-
-                var workloadIds = GetVisualStudioWorkloads();
-                foreach (string id in workloadIds)
-                    vsInstallerArgs += " --add " + id;
-                vsInstallerArgs += " --wait";
-
-                psi.Arguments = vsInstallerArgs;
                 process.WaitForExit();
                 Log.Information($"Visual Studio {_settings.Version} Updated!");
 
