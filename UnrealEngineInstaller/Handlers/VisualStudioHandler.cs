@@ -26,6 +26,9 @@ namespace UnrealEngineInstaller.Handlers
             "Microsoft.NetCore.Component.DevelopmentTools",
             "Microsoft.NetCore.Component.Runtime.7.0",
             "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+            "Microsoft.VisualStudio.Component.VC.Tools.ARM64",
+            "Microsoft.VisualStudio.Component.VC.14.34.17.4.ARM64",
+            "Microsoft.VisualStudio.Component.VC.14.34.17.4.x86.x64",
             "Component.Unreal.Ide",
             "Component.Unreal",
             "Microsoft.VisualStudio.Component.Windows10SDK.20348",
@@ -111,7 +114,7 @@ namespace UnrealEngineInstaller.Handlers
             ProcessStartInfo psi = new ProcessStartInfo();
             psi.FileName = installerFileName;
 
-            string vsInstallerArgs = "--install --quiet --norestart --includeRecommended";
+            string vsInstallerArgs = " --norestart --passive --includeRecommended";
             var workloadIDs = GetVisualStudioWorkloads();
             foreach (string workLoad in workloadIDs)
             {
@@ -138,7 +141,7 @@ namespace UnrealEngineInstaller.Handlers
             ProcessStartInfo psi = new ProcessStartInfo();
             psi.FileName = VisualStudioUpdaterFileName;
 
-            string vsInstallerArgs = "--update --quiet --norestart --includeRecommended";
+            string vsInstallerArgs = " --update --norestart --passive  --includeRecommended";
 
             var workloadIds = GetVisualStudioWorkloads();
             foreach (string id in workloadIds)

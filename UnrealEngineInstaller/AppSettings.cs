@@ -19,7 +19,6 @@
 
     class PlasticScmSettings
     {
-        public string RepoName { get; set; }
         public string BranchName { get; set; }
         public string ConnectionString { get; set; }
     }

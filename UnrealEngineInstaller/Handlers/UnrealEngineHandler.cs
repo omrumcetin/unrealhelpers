@@ -24,41 +24,81 @@ namespace UnrealEngineInstaller.Handlers
             return true;
         }
 
+        public void SetUnrealRootPath(string path)
+        {
+            _unrealEngineRootPath = path;
+        }
+
         public void CloneGitUnrealEngine(string gitToken, string clonePath)
         {
             _unrealEngineRootPath = clonePath;
+            bool bDoesRepoExists = false;
+
 
             if (Directory.Exists(_unrealEngineRootPath) == false)
                 Directory.CreateDirectory(_unrealEngineRootPath);
 
-            string repoName = "UnrealEngine";
-            string gitOwner = "EpicGames";
-            string cloneUrl = $"https://{gitToken}@github.com/{gitOwner}/{repoName}.git";
-
-            Log.Information($"Cloning Unreal Engine source...\n");
-
-            Process process = new Process()
+            if (Directory.Exists(Path.Combine(_unrealEngineRootPath, ".git")))
             {
-                StartInfo = new ProcessStartInfo()
+                bDoesRepoExists = true;
+            }
+
+            const string repoName = "UnrealEngine";
+            const string gitOwner = "EpicGames";
+
+            string output = null;
+            if (bDoesRepoExists)
+            {
+                Log.Information("Already git has been formed! Resetting repo.");
+                Process process = new Process()
                 {
-                    FileName = "git",
-                    Arguments = $"clone {cloneUrl} {clonePath}",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true
-                }
-            };
-            process.Start();
-            string output = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-            Log.Information(output);
+                    StartInfo = new ProcessStartInfo()
+                    {
+                        FileName = "git",
+                        Arguments = " reset --hard",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true
+                    }
+                };
+                process.Start();
+                output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                Log.Information(output);
+            }
+            else
+            {
+                string cloneUrl = $"https://{gitToken}@github.com/{gitOwner}/{repoName}.git";
+
+                Log.Information($"Cloning Unreal Engine source...\n");
+
+                Process process = new Process()
+                {
+                    StartInfo = new ProcessStartInfo()
+                    {
+                        FileName = "git",
+                        Arguments = $"clone {cloneUrl} {clonePath}",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true
+                    }
+                };
+                process.Start();
+                output = process.StandardOutput.ReadToEnd();
+                process.WaitForExit();
+                Log.Information(output);
+            }
+            
+            
 
             // Change directory to the cloned repository
             Environment.CurrentDirectory = clonePath;
 
             // Pull all changes and commits
+            Log.Information($"Pulling all changes...\n");
             Process.Start("git", "pull --all").WaitForExit();
-
+            Log.Information($"Done\n");
+            
             // Get everything
+            Log.Information($"Fetch everything...\n");
             Process.Start("git", "fetch").WaitForExit();
 
             Process processCheckout = new Process()
@@ -75,6 +115,7 @@ namespace UnrealEngineInstaller.Handlers
             output = processCheckout.StandardOutput.ReadToEnd();
             processCheckout.WaitForExit();
             Log.Information(output);
+            Log.Information($"Done\n");
         }
         public void CopyCommitGitDepths()
         {
@@ -109,6 +150,8 @@ namespace UnrealEngineInstaller.Handlers
             if (bFixSolver)
                 FixSolverIssue(workingDirectory);
 
+            FixNoDiscard(workingDirectory);
+
             Process rebuildProcess = new Process()
             {
                 StartInfo = new ProcessStartInfo()
@@ -132,6 +175,14 @@ namespace UnrealEngineInstaller.Handlers
             string filePath = Path.Combine(BasePath, @"Engine\Plugins\Experimental\ChaosUserDataPT\Source\ChaosUserDataPT\Public\ChaosUserDataPT.h");
             string text = File.ReadAllText(filePath);
             text = text.Replace("FPhysicsSolverBase* Solver", "FPhysicsSolverBase* TheSolver");
+            File.WriteAllText(filePath, text);
+        }
+
+        private void FixNoDiscard(string BasePath)
+        {
+            string filePath = Path.Combine(BasePath, @"Engine\Plugins\Runtime\Steam\SteamVR\Source\SteamVRInputDevice\Private\SteamVRInputDeviceFunctionLibrary.cpp");
+            string text = File.ReadAllText(filePath);
+            text = text.Replace("GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, (TEXT(\"Unable to find Action [%s] for Action Set [%s]\"), *ActionName.ToString(), *ActionSet.ToString()));", "");
             File.WriteAllText(filePath, text);
         }
 

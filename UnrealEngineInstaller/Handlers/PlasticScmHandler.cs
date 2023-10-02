@@ -9,6 +9,8 @@ namespace UnrealEngineInstaller.Handlers
     {
         private const string CmPath = @"client\cm.exe";
         private string FullCmPath;
+
+        private string PrereqOutput;
         //private const string PlasticScmWorkSpacePath = @"D:\UnrealWorkSpace\Oikos";
         private string _workspacePath;
 
@@ -42,49 +44,28 @@ namespace UnrealEngineInstaller.Handlers
             process.StartInfo.RedirectStandardOutput = true;
 
             process.Start();
-            string output = process.StandardOutput.ReadToEnd();
+            PrereqOutput = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
 
             //Output when not logged in: "The server spec is not correct: invalid."
-            if (output.Contains("invalid."))
+            if (PrereqOutput.Contains("invalid."))
             {
                 Log.Error($"Plastic SCM is not logged in. Please login manually as in instructions that gave by developers.");
                 return false;
             }
-            else
-                Log.Information($"Plastic SCM is logged in.");
-
-            bool hasRepo = false;
-            var lines = output.Split('\n');
-            foreach (var line in lines)
-            {
-                //Log.Information($"line: {line}");
-                if (line.Contains($"{_settings.RepoName}@{_settings.ConnectionString}"))
-                {
-                    hasRepo = true;
-                    break;
-                }
-            }
-            if (hasRepo)
-                Log.Information($"Repo '{_settings.RepoName}' is found in the repository list.");
-            else
-            {
-                Log.Error($"Repo '{_settings.RepoName}' is not found in the repository list.");
-                return false;
-            }
-
-            Log.Information($"Plastic SCM is valid.");
+            Log.Information($"Plastic SCM is logged in.");
+            
             return true;
         }
 
-        public void CreateWorkspace(string repoPath, string workspaceName)
+        public void CreateWorkspace(string repoPath, string workspaceName, string repoName)
         {
             if (string.IsNullOrEmpty(workspaceName))
             {
-                workspaceName = _settings.RepoName;
+                workspaceName = repoName;
             }
             _workspacePath = Path.Combine(repoPath, workspaceName);
-            string fullRepoName = $"{_settings.RepoName}@{_settings.ConnectionString}";
+            string fullRepoName = $"{repoName}@{_settings.ConnectionString}";
 
             Process process = new Process();
             process.StartInfo.FileName = FullCmPath;
@@ -162,6 +143,22 @@ namespace UnrealEngineInstaller.Handlers
 
             // Print the output to the console
             Log.Information(output);
+        }
+
+        public bool CheckRepo(string RepoName)
+        {
+            var lines = PrereqOutput.Split('\n');
+            foreach (var line in lines)
+            {
+                //Log.Information($"line: {line}");
+                if (line.Contains($"{RepoName}@{_settings.ConnectionString}"))
+                {
+                    Log.Information($"Repo '{RepoName}' is found in the repository list.");
+                    return true;
+                }
+            }
+            Log.Error($"Repo '{RepoName}' is not found in the repository list.");
+            return false;
         }
     }
 }

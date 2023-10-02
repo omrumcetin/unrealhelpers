@@ -38,6 +38,7 @@ namespace UnrealEngineInstaller
             bool bPlasticEnabled = true;
             bool bFixDeps = false;
             bool bFixSolver = false;
+            bool buildEngineOnly = false;
             if (args.Length > 0)
             {
                 foreach (string arg in args)
@@ -46,6 +47,7 @@ namespace UnrealEngineInstaller
                     if (arg == "-noplastic") bPlasticEnabled = false;
                     if (arg == "-fixdeps") bFixDeps = true;
                     if (arg == "-fixsolver") bFixSolver = true;
+                    if (arg == "-buildEngineOnly") buildEngineOnly = true;
                 }
             }
 
@@ -62,6 +64,17 @@ namespace UnrealEngineInstaller
                 else
                     visualStudioHandler.InstallVisualStudio();
 
+                if (buildEngineOnly)
+                {
+                    string unrealEnginePath = GetUserInput(@"Please Enter a path to build the unreal engine: (Default: C:\Program Files\UnrealEngine)");
+                    unrealEngineHandler.SetUnrealRootPath(unrealEnginePath);
+                    unrealEngineHandler.RunSetupBat();
+                    unrealEngineHandler.RunGenerateProjectFilesBat();
+                    var msBuildPathForFix = visualStudioHandler.GetMsBuildPath();
+                    unrealEngineHandler.BuildUnrealEngine(msBuildPathForFix, bFixSolver);
+                    return;
+                }
+
                 //Unreal engine
                 var gitToken = GetUserInput("Please Enter your Git PAT Token:");
                 string unrealEngineRootPath = GetUserInput(@"Please Enter a path to download unreal engine: (Default: C:\Program Files\UnrealEngine)");
@@ -71,6 +84,7 @@ namespace UnrealEngineInstaller
                 }
 
                 unrealEngineHandler.CloneGitUnrealEngine(gitToken, unrealEngineRootPath);
+
                 if (bFixDeps) unrealEngineHandler.CopyCommitGitDepths();
                 unrealEngineHandler.RunSetupBat();
                 unrealEngineHandler.RunGenerateProjectFilesBat();
@@ -80,13 +94,31 @@ namespace UnrealEngineInstaller
                 //Plastic SCM
                 if (bPlasticEnabled)
                 {
+                    Log.Information("*********READ HERE CAREFULLY*******");
+                    Log.Information(@"!Path is base path of your plastic repos! (Ex : C:\Repos)");
+                    Log.Information(@"!!Workspace name is the workspace name can be different from repo name. (Ex : WkspaceOfMita)");
+                    Log.Information("!!!Repo name is something that you clone to your space, it should be available repo in the system. (Ex : MITA)");
+                    Log.Information("********BASE ON ABOVE OUTPUT YOUR PATH WILL LOOK LIKE THIS************");
+                    Log.Information(@"C:\Repos\WkspaceOfMita    <-------- MITA Repo will be in it!");
+                    Log.Information("**************************************");
+                    Log.Warning("If you read carefully, press any key to continue...");
+                    Console.ReadKey();
+                    
                     var repoPath = GetUserInput(@"Please Enter a path to create Plastic SCM workspace: (Default: C:\Repos)");
                     if (string.IsNullOrEmpty(repoPath))
                     {
                         repoPath = @"C:\Repos";
                     }
+
+                    bool validRepo = false;
+                    string plasticRepoName = null;
+                    while (!validRepo)
+                    {
+                        plasticRepoName = GetUserInput(@"Enter the repo name");
+                        validRepo = plasticScmHandler.CheckRepo(plasticRepoName);
+                    }
                     var plasticWorkspaceName = GetUserInput(@"Please Enter the workspace name. (Default : repo name will be used.)");
-                    plasticScmHandler.CreateWorkspace(repoPath, plasticWorkspaceName);
+                    plasticScmHandler.CreateWorkspace(repoPath, plasticWorkspaceName, plasticRepoName);
                     plasticScmHandler.SwitchBranchAndUpdateWorkspace();
                     plasticScmHandler.SwitchUnrealVersionInWorkspace(unrealEngineRootPath);
                 }
@@ -122,7 +154,6 @@ namespace UnrealEngineInstaller
             reportMessage += $"VisualStudio Version: {appSettings.VisualStudioSettings.Version}\n";
             reportMessage += $"Unreal CommitHash: {appSettings.UnrealEngineSettings.CommitHash}\n";
             reportMessage += $"Plastic Scm Connected Server: {appSettings.PlasticScmSettings.ConnectionString}\n";
-            reportMessage += $"Plastic Scm Repo Name: {appSettings.PlasticScmSettings.RepoName}\n";
             reportMessage += $"Plastic Scm Branch Name: {appSettings.PlasticScmSettings.BranchName}\n";
             reportMessage += "**********************************";
             Log.Information(reportMessage);
