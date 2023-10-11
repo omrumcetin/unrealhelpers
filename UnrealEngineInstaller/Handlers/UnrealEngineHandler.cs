@@ -57,7 +57,8 @@ namespace UnrealEngineInstaller.Handlers
                         FileName = "git",
                         Arguments = " reset --hard",
                         UseShellExecute = false,
-                        RedirectStandardOutput = true
+                        RedirectStandardOutput = true,
+                        WorkingDirectory = _unrealEngineRootPath
                     }
                 };
                 process.Start();
@@ -76,7 +77,7 @@ namespace UnrealEngineInstaller.Handlers
                     StartInfo = new ProcessStartInfo()
                     {
                         FileName = "git",
-                        Arguments = $"clone {cloneUrl} {clonePath}",
+                        Arguments = $" clone {cloneUrl} {clonePath}",
                         UseShellExecute = false,
                         RedirectStandardOutput = true
                     }
@@ -157,7 +158,7 @@ namespace UnrealEngineInstaller.Handlers
                 StartInfo = new ProcessStartInfo()
                 {
                     FileName = msbuildPath,
-                    Arguments = $@"{solutionPath} -t:Engine\UE5 /t:Build /p:Configuration=""Development Editor"";platform=Win64",
+                    Arguments = $@"{solutionPath} -t:Engine\UE5 /t:Build -restore /p:Configuration=""Development Editor"";platform=Win64",
                     WorkingDirectory = workingDirectory
                 }
             };
