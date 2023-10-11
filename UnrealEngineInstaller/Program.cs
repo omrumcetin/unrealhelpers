@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using Serilog;
@@ -34,20 +35,20 @@ namespace UnrealEngineInstaller
             Log.Warning("If everything ready, press any key to continue...");
             Console.ReadKey();
 
-            bool bForceEnabled = false;
-            bool bPlasticEnabled = true;
-            bool bFixDeps = false;
-            bool bFixSolver = false;
-            bool buildEngineOnly = false;
+            var bForceEnabled = false;
+            var bPlasticEnabled = true;
+            var bFixDeps = false;
+            var bFixSolver = false;
+            var bBuildEngineOnly = false;
             if (args.Length > 0)
             {
                 foreach (string arg in args)
                 {
-                    if (arg == "-force") bForceEnabled = true;
-                    if (arg == "-noplastic") bPlasticEnabled = false;
-                    if (arg == "-fixdeps") bFixDeps = true;
-                    if (arg == "-fixsolver") bFixSolver = true;
-                    if (arg == "-buildEngineOnly") buildEngineOnly = true;
+                    if (string.Equals(arg, "-force", StringComparison.InvariantCultureIgnoreCase)) bForceEnabled = true;
+                    if (string.Equals(arg, "-noplastic", StringComparison.InvariantCultureIgnoreCase)) bPlasticEnabled = false;
+                    if (string.Equals(arg, "-fixdeps", StringComparison.InvariantCultureIgnoreCase)) bFixDeps = true;
+                    if (string.Equals(arg, "-fixsolver", StringComparison.InvariantCultureIgnoreCase)) bFixSolver = true;
+                    if (string.Equals(arg, "-buildengineonly", StringComparison.InvariantCultureIgnoreCase)) bBuildEngineOnly = true;
                 }
             }
 
@@ -64,7 +65,7 @@ namespace UnrealEngineInstaller
                 else
                     visualStudioHandler.InstallVisualStudio();
 
-                if (buildEngineOnly)
+                if (bBuildEngineOnly)
                 {
                     string unrealEnginePath = GetUserInput(@"Please Enter a path to build the unreal engine: (Default: C:\Program Files\UnrealEngine)");
                     unrealEngineHandler.SetUnrealRootPath(unrealEnginePath);
