@@ -1,9 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
-using Serilog;
+﻿using Serilog;
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 
 namespace UnrealEngineInstaller.Handlers
 {
@@ -33,8 +31,7 @@ namespace UnrealEngineInstaller.Handlers
         {
             _unrealEngineRootPath = clonePath;
             bool bDoesRepoExists = false;
-
-
+            
             if (Directory.Exists(_unrealEngineRootPath) == false)
                 Directory.CreateDirectory(_unrealEngineRootPath);
 
@@ -88,8 +85,6 @@ namespace UnrealEngineInstaller.Handlers
                 Log.Information(output);
             }
             
-            
-
             // Change directory to the cloned repository
             Environment.CurrentDirectory = clonePath;
 
@@ -118,6 +113,7 @@ namespace UnrealEngineInstaller.Handlers
             Log.Information(output);
             Log.Information($"Done\n");
         }
+        
         public void CopyCommitGitDepths()
         {
             string sourcePath = $@"{AppDomain.CurrentDomain.BaseDirectory}\Commit.gitdeps.xml";

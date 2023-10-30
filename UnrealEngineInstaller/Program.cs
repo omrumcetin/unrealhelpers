@@ -40,6 +40,7 @@ namespace UnrealEngineInstaller
             var bFixDeps = false;
             var bFixSolver = false;
             var bBuildEngineOnly = false;
+            var bUpgradeEngine = false;
             if (args.Length > 0)
             {
                 foreach (string arg in args)
@@ -49,6 +50,7 @@ namespace UnrealEngineInstaller
                     if (string.Equals(arg, "-fixdeps", StringComparison.InvariantCultureIgnoreCase)) bFixDeps = true;
                     if (string.Equals(arg, "-fixsolver", StringComparison.InvariantCultureIgnoreCase)) bFixSolver = true;
                     if (string.Equals(arg, "-buildengineonly", StringComparison.InvariantCultureIgnoreCase)) bBuildEngineOnly = true;
+                    if (string.Equals(arg, "-upgrade", StringComparison.InvariantCultureIgnoreCase)) bUpgradeEngine = true;
                 }
             }
 
@@ -65,9 +67,16 @@ namespace UnrealEngineInstaller
                 else
                     visualStudioHandler.InstallVisualStudio();
 
+                var gitToken = "";
+
                 if (bBuildEngineOnly)
                 {
                     string unrealEnginePath = GetUserInput(@"Please Enter a path to build the unreal engine: (Default: C:\Program Files\UnrealEngine)");
+                    if (bUpgradeEngine)
+                    {
+                        gitToken = GetUserInput("Please Enter your Git PAT Token to fetch updates:");
+                        unrealEngineHandler.CloneGitUnrealEngine(gitToken, unrealEnginePath);
+                    }
                     unrealEngineHandler.SetUnrealRootPath(unrealEnginePath);
                     unrealEngineHandler.RunSetupBat();
                     unrealEngineHandler.RunGenerateProjectFilesBat();
@@ -77,7 +86,7 @@ namespace UnrealEngineInstaller
                 }
 
                 //Unreal engine
-                var gitToken = GetUserInput("Please Enter your Git PAT Token:");
+                gitToken = GetUserInput("Please Enter your Git PAT Token:");
                 string unrealEngineRootPath = GetUserInput(@"Please Enter a path to download unreal engine: (Default: C:\Program Files\UnrealEngine)");
                 if (string.IsNullOrEmpty(unrealEngineRootPath))
                 {
